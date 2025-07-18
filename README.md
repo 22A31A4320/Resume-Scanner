@@ -1,4 +1,5 @@
-Resume Scanner — Project Documentation
+Resume Scanner — Project Documentation:
+
 📌 1. Project Overview
 In today’s competitive job market, candidates often apply for multiple roles and must ensure that their resumes align with the job description. Many employers use Applicant Tracking Systems (ATS) that scan resumes for specific keywords to shortlist candidates. Applicants whose resumes lack the right keywords, skills, or relevant experience often do not pass the first screening stage, regardless of their actual capabilities.
 
