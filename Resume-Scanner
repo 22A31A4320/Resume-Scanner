@@ -1,0 +1,68 @@
+# Install dependencies
+!pip install streamlit PyMuPDF scikit-learn -q
+!npm install -g localtunnel
+!pip install streamlit -q
+!npm install -g localtunnel
+!wget -q -O - ipv4.icanhazip.com
+! streamlit run app.py & npx localtunnel --port 8501 
+
+app.py code 
+
+
+import streamlit as st
+import fitz  # PyMuPDF
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import re
+
+st.set_page_config(page_title="Resume Scanner", layout="wide")
+st.title("📄 Resume Scanner(PDF Upload)")
+
+job_description = """
+We are looking for a skilled Python developer with experience in machine learning, data analysis, and backend development.
+Strong knowledge of Python, pandas, scikit-learn, Flask/Django, and REST APIs is required.
+"""
+
+def extract_text_from_pdf(pdf_file):
+    doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    return text
+
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    return text
+
+def calculate_similarity(resume_text, job_text):
+    vectorizer = TfidfVectorizer()
+    vectors = vectorizer.fit_transform([resume_text, job_text])
+    sim_score = cosine_similarity(vectors[0:1], vectors[1:2])[0][0]
+    return round(sim_score * 100, 2)
+
+uploaded_file = st.file_uploader("Upload your Resume (PDF only)", type=['pdf'])
+
+if uploaded_file is not None:
+    resume_text = extract_text_from_pdf(uploaded_file)
+    resume_clean = clean_text(resume_text)
+    jd_clean = clean_text(job_description)
+
+    match_percent = calculate_similarity(resume_clean, jd_clean)
+
+    st.subheader("🔍 Match Percentage")
+    st.progress(int(match_percent))
+    st.success(f"✅ Your resume matches {match_percent}% with the job description!")
+
+    st.subheader("📌 Keywords to Consider")
+    jd_keywords = set(job_description.lower().split())
+    resume_keywords = set(resume_clean.split())
+    missing_keywords = jd_keywords - resume_keywords
+    if missing_keywords:
+        st.warning("Try adding these keywords to improve match:")
+        st.code(", ".join(sorted(missing_keywords)))
+    else:
+        st.success("Great! Your resume covers all essential keywords.")
+
+    st.subheader("🧾 Extracted Resume Text")
+    st.text_area("Resume Content", resume_text, height=300)
